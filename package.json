@@ -1,0 +1,18 @@
+{
+  "name": "com.alteracia.altweb",
+  "version": "0.0.0",
+  "displayName": "altWeb",
+  "description": "Some network functions for Unity",
+  "unity": "2019.4",
+  "keywords": [
+    "patterns"
+  ],
+  "author": {
+    "name": "Pavel Kazantsev",
+    "email": "kazantsev@alteracia.ru",
+    "url": ""
+  },
+  "dependencies": {
+  },
+  "type": "library"
+}
