@@ -40,6 +40,7 @@ namespace Alteracia.Web
     
     public static class Requests
     {
+        /*
         /// <summary>
         /// Get from server using UnitWebRequest
         /// </summary>
@@ -93,6 +94,7 @@ namespace Alteracia.Web
                 callback(request);
             }
         }
+        */
 
         public static async Task<UnityWebRequest> Image(string uri, string[] header = null)
         {
@@ -111,7 +113,7 @@ namespace Alteracia.Web
 #endif
             return request;
         }
-
+/*
         /// <summary>
         /// Post to server using UnitWebRequest
         /// </summary>
@@ -141,7 +143,7 @@ namespace Alteracia.Web
                 callback(request);
             }
         }
-        
+        */
         /*
         public static TaskAwaiter GetAwaiter(this AsyncOperation asyncOp)
         {
@@ -161,6 +163,13 @@ namespace Alteracia.Web
         public static async Task<UnityWebRequest> Post(string uri, string[] header = null)
         {
             UnityWebRequest request = UnityWebRequest.Post(uri, "");
+
+            return await SendWebRequest(uri, header, request);
+        }
+        
+        public static async Task<UnityWebRequest> Get(string uri, string[] header = null)
+        {
+            UnityWebRequest request = UnityWebRequest.Get(uri);
 
             return await SendWebRequest(uri, header, request);
         }
@@ -236,7 +245,7 @@ namespace Alteracia.Web
             return request;
         }
 
-        
+        /*
         /// <summary>
         /// Post to server using UnitWebRequest
         /// </summary>
@@ -303,5 +312,6 @@ namespace Alteracia.Web
             }
         }
 
+        */
     }
 }
