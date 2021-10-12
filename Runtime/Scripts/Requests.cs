@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -40,62 +38,20 @@ namespace Alteracia.Web
     
     public static class Requests
     {
-        /*
-        /// <summary>
-        /// Get from server using UnitWebRequest
-        /// </summary>
-        /// <param name="uri">Full uri of request</param>
-        /// <param name="callback">On complete callback</param>
-        /// <param name="header">Headers add to request</param>
-        /// <returns></returns>
-        public static IEnumerator Get(string uri, Action<UnityWebRequest> callback, string[] header = null)
+        public static bool Success(this UnityWebRequest request)
         {
-#if ALT_LOADING_LOG || UNITY_EDITOR
-             int log = Log.Start($"curl -X GET \"{uri}\"" + (header != null ? $"-H \"{header[0]} {header[1]}\" " : " "));
+#if UNITY_2020_1_OR_NEWER
+        return request.isDone && request.result == UnityWebRequest.Result.Success;
+#else
+        return request.isDone && !request.isNetworkError && !request.isHttpError;
 #endif
-            using (UnityWebRequest request = UnityWebRequest.Get(uri))
-            {
-                if (header != null) request.SetRequestHeader(header[0], header[1]);
-                
-                // Send the request and wait for a response
-                yield return request.SendWebRequest();
-#if ALT_LOADING_LOG || UNITY_EDITOR
-                if (request.isNetworkError || request.isHttpError)
-                    Log.Finish(log, $"{request.error}: {request.downloadHandler.text}");
-                else
-                    Log.Finish(log, $"SUCCESS: data - {request.downloadHandler.data.Length}, text - {request.downloadHandler.text.Length}");
-#endif
-                callback(request);
-            }
         }
         
-        /// <summary>
-        /// Load Image from server using UnityWebRequestTexture
-        /// </summary>
-        /// <param name="uri">Full uri of request</param>
-        /// <param name="callback">On complete callback</param>
-        /// <param name="header">Headers add to request</param>
-        /// <returns></returns>
-        public static IEnumerator Image(string uri, Action<UnityWebRequest> callback, string[] header = null)
+        private static UnityWebRequestAwaiter GetAwaiter(this UnityWebRequestAsyncOperation asyncOp)
         {
-#if ALT_LOADING_LOG || UNITY_EDITOR
-            int log = Log.Start($"curl -X GET \"{uri}\"" + (header != null ? $"-H \"{header[0]}: {header[1]}\" " : " "));
-#endif
-            using (UnityWebRequest request = UnityWebRequestTexture.GetTexture(uri))
-            {
-                if (header != null) request.SetRequestHeader(header[0], header[1]);
-                yield return request.SendWebRequest();
-#if ALT_LOADING_LOG || UNITY_EDITOR
-                if (request.isNetworkError || request.isHttpError)
-                    Log.Finish(log, $"{request.error}: {request.downloadHandler.text}");
-                else
-                    Log.Finish(log, $"SUCCESS: image - {request.downloadHandler.data.Length}, text - {request.downloadHandler.text.Length}");
-#endif
-                callback(request);
-            }
+            return new UnityWebRequestAwaiter(asyncOp);
         }
-        */
-
+        
         public static async Task<UnityWebRequest> Image(string uri, string[] header = null)
         {
 #if ALT_LOADING_LOG || UNITY_EDITOR
@@ -104,58 +60,18 @@ namespace Alteracia.Web
             UnityWebRequest request = UnityWebRequestTexture.GetTexture(uri, true);
 
             if (header != null) request.SetRequestHeader(header[0], header[1]);
+            
             await request.SendWebRequest();
+            
 #if ALT_LOADING_LOG || UNITY_EDITOR
-            if (request.isNetworkError || request.isHttpError)
+            if (!request.Success())
                 Log.Finish(log, $"{request.error}: {request.downloadHandler.text}");
             else
                 Log.Finish(log, $"SUCCESS: image - {request.downloadHandler.data.Length}, text - {request.downloadHandler.text.Length}");
 #endif
             return request;
         }
-/*
-        /// <summary>
-        /// Post to server using UnitWebRequest
-        /// </summary>
-        /// <param name="uri">Full uri of request</param>
-        /// <param name="message">Post message</param>
-        /// <param name="callback">On complete callback</param>
-        /// <param name="header">Headers add to request</param>
-        /// <returns></returns>
-        public static IEnumerator Post(string uri, WWWForm message, Action<UnityWebRequest> callback, string[] header = null)
-        {
-#if ALT_LOADING_LOG || UNITY_EDITOR
-            int log = Log.Start($"curl -X POST \"{uri}\"" + (header != null ? 
-                $"-H \"{header[0]}: {header[1]}\" " : " ") + $"-d \"{message}\"");
-#endif
 
-            using (UnityWebRequest request = UnityWebRequest.Post(uri, message))
-            {
-                if (header != null) request.SetRequestHeader(header[0], header[1]);
-                // Send the request and wait for a response
-                yield return request.SendWebRequest();
-#if ALT_LOADING_LOG || UNITY_EDITOR
-                if (request.isNetworkError || request.isHttpError)
-                    Log.Finish(log, $"{request.error}: {request.downloadHandler.text}");
-                else
-                    Log.Finish(log, $"SUCCESS: data - {request.downloadHandler.data.Length}, text - {request.downloadHandler.text.Length}");
-#endif
-                callback(request);
-            }
-        }
-        */
-        /*
-        public static TaskAwaiter GetAwaiter(this AsyncOperation asyncOp)
-        {
-            var tcs = new TaskCompletionSource<object>();
-            asyncOp.completed += obj => { tcs.SetResult(null); };
-            return ((Task)tcs.Task).GetAwaiter();
-        }
-        */
-        public static UnityWebRequestAwaiter GetAwaiter(this UnityWebRequestAsyncOperation asyncOp)
-        {
-            return new UnityWebRequestAwaiter(asyncOp);
-        }
         
         // TODO Protect from same requests
         //static Dictionary<string, Task<UnityWebRequest>>
@@ -189,8 +105,9 @@ namespace Alteracia.Web
 
             // Send the request and wait for a response
             await request.SendWebRequest();
+            
 #if ALT_LOADING_LOG || UNITY_EDITOR
-            if (request.isNetworkError || request.isHttpError)
+            if (!request.Success())
                 Log.Finish(log, $"{request.error}: {request.downloadHandler.text}");
             else
                 Log.Finish(log,
@@ -225,7 +142,7 @@ namespace Alteracia.Web
             return request;
         }
         
-        public static async Task<UnityWebRequest> PostJson(string uri, string json, string[] header = null)
+        public static async Task<UnityWebRequest> Put(string uri, string json, string[] header = null)
         {
 #if ALT_LOADING_LOG || UNITY_EDITOR
             int log = Log.Start($"curl -X POST \"{uri}\"" + (header != null ? 
@@ -237,81 +154,12 @@ namespace Alteracia.Web
             request.method = "POST";
             await request.SendWebRequest();
 #if ALT_LOADING_LOG || UNITY_EDITOR
-            if (request.isNetworkError || request.isHttpError)
+            if (!request.Success())
                 Log.Finish(log, $"{request.error}: {request.downloadHandler.text}");
             else
                 Log.Finish(log, $"SUCCESS: data - {request.downloadHandler.data.Length}, text - {request.downloadHandler.text.Length}");
 #endif
             return request;
         }
-
-        /*
-        /// <summary>
-        /// Post to server using UnitWebRequest
-        /// </summary>
-        /// <param name="uri">Full uri of request</param>
-        /// <param name="data">Post data</param>
-        /// <param name="fileName">Post file name</param>
-        /// <param name="callback">On complete callback</param>
-        /// <param name="headers">Headers add to request</param>
-        /// <returns></returns>
-        public static IEnumerator PostMultipartFormData(string uri, byte[] data, string fileName, Action<UnityWebRequest> callback, string[] headers = null)
-        {
-#if ALT_LOADING_LOG || UNITY_EDITOR
-            int log = Log.Start($"curl -X POST \"{uri}\"" + (headers != null ?
-             $"-H \"{headers[0]}: {headers[1]}\" " : " ") + $"-d \"screenshot.png\"");
-#endif
-            List<IMultipartFormSection> formData = new List<IMultipartFormSection>
-            {
-                new MultipartFormFileSection("data", data, fileName, "multipart/form-data") // contentType: image/png
-            };
-
-            using (UnityWebRequest request = UnityWebRequest.Post(uri, formData))
-            {
-                if (headers != null) request.SetRequestHeader(headers[0], headers[1]);
-                yield return request.SendWebRequest();
-#if ALT_LOADING_LOG || UNITY_EDITOR
-                if (request.isNetworkError || request.isHttpError)
-                    Log.Finish(log, $"{request.error}: {request.downloadHandler.text}");
-                else
-                    Log.Finish(log, $"SUCCESS: data - {request.downloadHandler.data.Length}, text - {request.downloadHandler.text.Length}");
-#endif
-                callback(request);
-            }
-        }
-        
-        /// <summary>
-        /// Get redirected url from server using UnitWebRequest
-        /// </summary>
-        /// <param name="uri">Full uri of request</param>
-        /// <param name="callback">On complete callback</param>
-        /// <param name="header">Headers add to request</param>
-        /// <returns></returns>
-        public static IEnumerator GetRedirectionUrl(string uri, Action<string> callback, string[] header = null)
-        {
-            using (UnityWebRequest request = UnityWebRequest.Get(uri))
-            {
-                
-#if UNITY_WEBGL
-                request.downloadHandler.Dispose(); // don't load 
-#else
-                // Does not work in WebGL -> get url from request
-                request.redirectLimit = 0;
-#endif
-                
-                // Add header
-                if (header != null) request.SetRequestHeader(header[0], header[1]);
-                
-                // Send the request and wait for a response
-                yield return request.SendWebRequest();
-#if UNITY_WEBGL
-                callback(request.url);
-#else
-                callback(request.GetResponseHeader("location"));
-#endif
-            }
-        }
-
-        */
     }
 }
