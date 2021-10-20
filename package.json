@@ -1,8 +1,8 @@
 {
   "name": "com.alteracia.altweb",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "displayName": "altWeb",
-  "description": "Some network functions for Unity, awaitable requests",
+  "description": "Some network functions for Unity, awaitable requests, json attributes",
   "unity": "2017.1",
   "keywords": [
     "web"

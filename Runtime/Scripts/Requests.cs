@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -9,19 +10,6 @@ using UnityEngine.Networking;
 
 namespace Alteracia.Web
 {
-    [ DebuggerNonUserCode ]
-    public readonly struct AsyncOperationAwaiter : INotifyCompletion
-    {
-        private readonly AsyncOperation _asyncOperation;
-        public bool IsCompleted => _asyncOperation.isDone;
-
-        public AsyncOperationAwaiter( AsyncOperation asyncOperation ) => _asyncOperation = asyncOperation;
-
-        public void OnCompleted( Action continuation ) => _asyncOperation.completed += _ => continuation();
-
-        public void GetResult() { }
-    }
-
     [ DebuggerNonUserCode ]
     public readonly struct UnityWebRequestAwaiter : INotifyCompletion
     {
@@ -38,6 +26,13 @@ namespace Alteracia.Web
     
     public static class Requests
     {
+        // TODO Protect from same requests: static Dictionary<string, Task<UnityWebRequest>>
+        
+        /// <summary>
+        /// Is request succeed?
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns>true if success</returns>
         public static bool Success(this UnityWebRequest request)
         {
 #if UNITY_2020_1_OR_NEWER
@@ -47,53 +42,106 @@ namespace Alteracia.Web
 #endif
         }
         
-        private static UnityWebRequestAwaiter GetAwaiter(this UnityWebRequestAsyncOperation asyncOp)
-        {
-            return new UnityWebRequestAwaiter(asyncOp);
-        }
-        
-        public static async Task<UnityWebRequest> Image(string uri, string[] header = null)
-        {
-#if ALT_LOADING_LOG || UNITY_EDITOR
-            int log = Log.Start($"curl -X GET \"{uri}\"" + (header != null ? $"-H \"{header[0]}: {header[1]}\" " : " "));
-#endif
-            UnityWebRequest request = UnityWebRequestTexture.GetTexture(uri, true);
-
-            if (header != null) request.SetRequestHeader(header[0], header[1]);
-            
-            await request.SendWebRequest();
-            
-#if ALT_LOADING_LOG || UNITY_EDITOR
-            if (!request.Success())
-                Log.Finish(log, $"{request.error}: {request.downloadHandler.text}");
-            else
-                Log.Finish(log, $"SUCCESS: image - {request.downloadHandler.data.Length}, text - {request.downloadHandler.text.Length}");
-#endif
-            return request;
-        }
-
-        
-        // TODO Protect from same requests
-        //static Dictionary<string, Task<UnityWebRequest>>
-
-        public static async Task<UnityWebRequest> Post(string uri, string[] header = null)
-        {
-            UnityWebRequest request = UnityWebRequest.Post(uri, "");
-
-            return await SendWebRequest(uri, header, request);
-        }
-        
+        /// <summary>
+        /// Get from server using UnitWebRequest
+        /// </summary>
+        /// <param name="uri">Full uri of request</param>
+        /// <param name="header">Headers add to request</param>
+        /// <returns>UnitWebRequest</returns>
         public static async Task<UnityWebRequest> Get(string uri, string[] header = null)
         {
             UnityWebRequest request = UnityWebRequest.Get(uri);
 
-            return await SendWebRequest(uri, header, request);
+            return await request.SendWebRequest(header);
         }
         
-        private static async Task<UnityWebRequest> SendWebRequest(string uri, string[] header, UnityWebRequest request)
+        /// <summary>
+        /// Post from server using UnitWebRequest without message
+        /// </summary>
+        /// <param name="uri">Full uri of request</param>
+        /// <param name="header">Headers add to request</param>
+        /// <returns>UnitWebRequest</returns>
+        public static async Task<UnityWebRequest> Post(string uri, string[] header = null)
+        {
+            UnityWebRequest request = UnityWebRequest.Post(uri, "");
+
+            return await request.SendWebRequest(header);
+        }
+
+        /// <summary>
+        /// Get from server using UnitWebRequest with string message
+        /// </summary>
+        /// <param name="uri">Full uri of request</param>
+        /// <param name="message">String message</param>
+        /// <param name="header">Headers add to request</param>
+        /// <returns>UnitWebRequest</returns>
+        public static async Task<UnityWebRequest> Post(string uri, string message, string[] header = null)
+        {
+            UnityWebRequest request = UnityWebRequest.Post(uri, message);
+
+            return await request.SendWebRequest(header);
+        }
+
+        /// <summary>
+        /// Get from server using UnitWebRequest with WWWform message
+        /// </summary>
+        /// <param name="uri">Full uri of request</param>
+        /// <param name="message">WWWform message</param>
+        /// <param name="header">Headers add to request</param>
+        /// <returns>UnitWebRequest</returns>
+        public static async Task<UnityWebRequest> Post(string uri, WWWForm message, string[] header = null)
+        {
+            UnityWebRequest request = UnityWebRequest.Post(uri, message);
+
+            return await request.SendWebRequest(header);
+        }
+
+        /// <summary>
+        /// Post to server using UnitWebRequest with multipart array
+        /// </summary>
+        /// <param name="uri">Full uri of request</param>
+        /// <param name="message">Multipart array</param>
+        /// <param name="headers">Headers add to request</param>
+        /// <returns>UnitWebRequest</returns>
+        public static async Task<UnityWebRequest> Post(string uri, List<IMultipartFormSection> message, string[] headers = null)
+        {
+            UnityWebRequest request = UnityWebRequest.Post(uri, message);
+            
+            return await request.SendWebRequest(headers);
+        }
+        
+        public static async Task<UnityWebRequest> Put(string uri, string json, string[] header = null)
         {
 #if ALT_LOADING_LOG || UNITY_EDITOR
-            int log = Log.Start($"curl -X POST \"{uri}\"" + (header != null ? $"-H \"{header[0]}: {header[1]}\" " : " "));
+            int log = Log.Start($"curl -X POST \"{uri}\"" + (header != null ? 
+                $"-H \"{header[0]}: {header[1]}\" " : " ") + $"-d \"{json}\"");
+#endif
+
+            UnityWebRequest request = UnityWebRequest.Put(uri, json);
+            if (header != null) request.SetRequestHeader(header[0], header[1]);
+            request.method = "POST";
+            await request.SendWebRequest();
+#if ALT_LOADING_LOG || UNITY_EDITOR
+            if (!request.Success())
+                Log.Finish(log, $"{request.error}: {request.downloadHandler.text}");
+            else
+                Log.Finish(log, $"SUCCESS: data - {request.downloadHandler.data.Length}, text - {request.downloadHandler.text.Length}");
+#endif
+            return request;
+        }
+        
+        public static async Task<UnityWebRequest> Image(string uri, bool nonReadable = true, string[] header = null)
+        {
+
+            UnityWebRequest request = UnityWebRequestTexture.GetTexture(uri, nonReadable);
+
+            return await request.SendWebRequest(header);
+        }
+        
+        private static async Task<UnityWebRequest> SendWebRequest(this UnityWebRequest request, string[] header)
+        {
+#if ALT_LOADING_LOG || UNITY_EDITOR
+            int log = Log.Start($"curl -X POST \"{request.uri}\"" + (header != null ? $"-H \"{header[0]}: {header[1]}\" " : " "));
 #endif
             if (header != null)
             {
@@ -116,21 +164,7 @@ namespace Alteracia.Web
             return request;
         }
         
-        public static async Task<UnityWebRequest> Post(string uri, string message, string[] header = null)
-        {
-            UnityWebRequest request = UnityWebRequest.Post(uri, message);
-
-            return await SendWebRequest(request);
-        }
-
-        public static async Task<UnityWebRequest> Post(string uri, WWWForm message, string[] header = null)
-        {
-            UnityWebRequest request = UnityWebRequest.Post(uri, message);
-
-            return await SendWebRequest(request);
-        }
-        
-        private static async Task<UnityWebRequest> SendWebRequest(UnityWebRequest request)
+        private static async Task<UnityWebRequest> SendWebRequest(UnityWebRequest request) // TODO Test in web and all cases
         {
             UnityWebRequestAsyncOperation operation = request.SendWebRequest();
 
@@ -142,24 +176,9 @@ namespace Alteracia.Web
             return request;
         }
         
-        public static async Task<UnityWebRequest> Put(string uri, string json, string[] header = null)
+        private static UnityWebRequestAwaiter GetAwaiter(this UnityWebRequestAsyncOperation asyncOp)
         {
-#if ALT_LOADING_LOG || UNITY_EDITOR
-            int log = Log.Start($"curl -X POST \"{uri}\"" + (header != null ? 
-                $"-H \"{header[0]}: {header[1]}\" " : " ") + $"-d \"{json}\"");
-#endif
-
-            UnityWebRequest request = UnityWebRequest.Put(uri, json);
-            if (header != null) request.SetRequestHeader(header[0], header[1]);
-            request.method = "POST";
-            await request.SendWebRequest();
-#if ALT_LOADING_LOG || UNITY_EDITOR
-            if (!request.Success())
-                Log.Finish(log, $"{request.error}: {request.downloadHandler.text}");
-            else
-                Log.Finish(log, $"SUCCESS: data - {request.downloadHandler.data.Length}, text - {request.downloadHandler.text.Length}");
-#endif
-            return request;
+            return new UnityWebRequestAwaiter(asyncOp);
         }
     }
 }
