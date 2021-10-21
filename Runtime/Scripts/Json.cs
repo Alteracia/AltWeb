@@ -59,21 +59,15 @@ namespace Alteracia.Web
             return FormatJson(json, systemType);
         }
         
+        // Edit by Nordup Ondar
         public static string FormatJson(string json, Type systemType)
         {
             if (systemType == null) return json;
-            
             json = json.FixOneFieldJson(systemType);
-            foreach (var fieldInfo in systemType.GetFields())
-            {
-                // Edit by Nordup Ondar
-                json = json.ReplaceFieldByName(fieldInfo);
-                var fType = fieldInfo.FieldType.IsArray ? fieldInfo.FieldType.GetElementType() : fieldInfo.FieldType;
-
-                if (fType != null && !fType.IsSimple())
-                    json = FormatJson(json, fType);
-            }
             
+            var fields = GetFieldsRecursively(systemType);
+            json = fields.Aggregate(json, (current, fieldInfo) => current.ReplaceFieldByName(fieldInfo));
+
             // If json is array wrap to JsonArray
             return json.FormatIfJsonArray().FormatIfArrayInArray();
         }
