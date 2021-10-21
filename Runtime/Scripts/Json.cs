@@ -59,7 +59,7 @@ namespace Alteracia.Web
             return FormatJson(json, systemType);
         }
         
-        public static string FormatJson(this string json, Type systemType)
+        public static string FormatJson(string json, Type systemType)
         {
             if (systemType == null) return json;
             
