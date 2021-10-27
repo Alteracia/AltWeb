@@ -1,0 +1,15 @@
+{
+    "name": "RuntimeTest",
+    "references": [
+        "GUID:ddbcd5924212c4f19b2f2548b3e01b2e"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -52,7 +52,7 @@ namespace Alteracia.Web
         {
             UnityWebRequest request = UnityWebRequest.Get(uri);
 
-            return await request.SendWebRequest(header);
+            return await request.SendWebRequest(); // request.SendWebRequest(header);
         }
         
         /// <summary>
@@ -112,27 +112,14 @@ namespace Alteracia.Web
         
         public static async Task<UnityWebRequest> Put(string uri, string json, string[] header = null)
         {
-#if ALT_LOADING_LOG || UNITY_EDITOR
-            int log = Log.Start($"curl -X POST \"{uri}\"" + (header != null ? 
-                $"-H \"{header[0]}: {header[1]}\" " : " ") + $"-d \"{json}\"");
-#endif
-
             UnityWebRequest request = UnityWebRequest.Put(uri, json);
-            if (header != null) request.SetRequestHeader(header[0], header[1]);
             request.method = "POST";
-            await request.SendWebRequest();
-#if ALT_LOADING_LOG || UNITY_EDITOR
-            if (!request.Success())
-                Log.Finish(log, $"{request.error}: {request.downloadHandler.text}");
-            else
-                Log.Finish(log, $"SUCCESS: data - {request.downloadHandler.data.Length}, text - {request.downloadHandler.text.Length}");
-#endif
-            return request;
+            
+            return await request.SendWebRequest(header);
         }
         
         public static async Task<UnityWebRequest> Image(string uri, bool nonReadable = true, string[] header = null)
         {
-
             UnityWebRequest request = UnityWebRequestTexture.GetTexture(uri, nonReadable);
 
             return await request.SendWebRequest(header);
