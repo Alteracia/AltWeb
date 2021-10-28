@@ -78,7 +78,7 @@ namespace Alteracia.Web
             var fields = new List<FieldInfo>();
             if (type == null) return fields.ToList();
 
-            var notChecked = new Queue<FieldInfo>(type.GetFields());
+            var notChecked = new Queue<FieldInfo>(type.GetFields()); // TODO Check for DateTime What difference ?
 
             while (notChecked.Count > 0)
             {

@@ -49,6 +49,8 @@ namespace Tests
         [Test]
         public void DateTimeTest()
         {
+            Type type = typeof(DateTime);
+            
             string json = @"{""stringValue"":""true""}"; // TODO Add All levels
             DateTimeObject dto = JsonUtility.FromJson<DateTimeObject>(json); // OK 
             //DateTimeObject dto = JsonUtility.FromJson<DateTimeObject>(json.FormatJsonText(typeof(DateTimeObject))); // KO
