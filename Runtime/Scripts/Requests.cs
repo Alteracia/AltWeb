@@ -118,6 +118,13 @@ namespace Alteracia.Web
             return await request.SendWebRequest(header);
         }
         
+        public static async Task<UnityWebRequest> Delete(string uri, string[] header = null)
+        {
+            UnityWebRequest request = UnityWebRequest.Delete(uri);
+
+            return await request.SendWebRequest(header);
+        }
+        
         public static async Task<UnityWebRequest> Image(string uri, bool nonReadable = true, string[] header = null)
         {
             UnityWebRequest request = UnityWebRequestTexture.GetTexture(uri, nonReadable);
@@ -148,18 +155,6 @@ namespace Alteracia.Web
                 Log.Finish(log,
                     $"SUCCESS: data - {request.downloadHandler.data.Length}, text - {request.downloadHandler.text.Length}");
 #endif
-            return request;
-        }
-        
-        private static async Task<UnityWebRequest> SendWebRequest(UnityWebRequest request) // TODO Test in web and all cases
-        {
-            UnityWebRequestAsyncOperation operation = request.SendWebRequest();
-
-            while (!operation.isDone)
-            {
-                await Task.Delay(100);
-            }
-
             return request;
         }
         
