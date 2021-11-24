@@ -134,6 +134,8 @@ namespace Alteracia.Web
         
         private static async Task<UnityWebRequest> SendWebRequest(this UnityWebRequest request, string[] header)
         {
+            if (request == null) return null;
+            
 #if ALT_LOADING_LOG || UNITY_EDITOR
             int log = Log.Start($"curl -X POST \"{request.uri}\"" + (header != null ? $"-H \"{header[0]}: {header[1]}\" " : " "));
 #endif
@@ -150,10 +152,10 @@ namespace Alteracia.Web
             
 #if ALT_LOADING_LOG || UNITY_EDITOR
             if (!request.Success())
-                Log.Finish(log, $"{request.error}: {request.downloadHandler.text}");
+                Log.Finish(log, $"{request.error}: {request.downloadHandler?.text}");
             else
                 Log.Finish(log,
-                    $"SUCCESS: data - {request.downloadHandler.data.Length}, text - {request.downloadHandler.text.Length}");
+                    $"SUCCESS: data - {request.downloadHandler?.data.Length}, text - {request.downloadHandler?.text.Length}");
 #endif
             return request;
         }
