@@ -109,7 +109,7 @@ namespace Alteracia.Web
             
             return await request.SendWebRequest(headers);
         }
-        
+
         public static async Task<UnityWebRequest> PostJson(string uri, string json, string[] header = null)
         {
             UnityWebRequest request = UnityWebRequest.Put(uri, json);
@@ -137,6 +137,14 @@ namespace Alteracia.Web
             UnityWebRequest request = UnityWebRequest.Put(uri, data);
             
             return await request.SendWebRequest(header);
+        }
+        
+        public static async Task<UnityWebRequest> Put(string uri, List<IMultipartFormSection> message, string[] headers = null)
+        {
+            UnityWebRequest request = UnityWebRequest.Post(uri, message);
+            request.method = "PUT";
+            
+            return await request.SendWebRequest(headers);
         }
         
         public static async Task<UnityWebRequest> Delete(string uri, string[] header = null)
