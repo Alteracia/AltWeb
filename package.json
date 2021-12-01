@@ -10,7 +10,9 @@
     "json"
   ],
   "author": {
-    "name": "Pavel Kazantsev, Nordup Ondar",
+    "name": "Pavel Kazantsev",
+    "email": "kazantsev@alteracia.ru",
+    "url": "alteracia.ru"
   },
   "samples": [
     {
