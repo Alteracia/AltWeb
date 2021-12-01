@@ -118,9 +118,23 @@ namespace Alteracia.Web
             return await request.SendWebRequest(header);
         }
         
+        public static async Task<UnityWebRequest> Put(string uri, string[] header = null)
+        {
+            UnityWebRequest request = UnityWebRequest.Put(uri, "");
+            
+            return await request.SendWebRequest(header);
+        }
+        
         public static async Task<UnityWebRequest> Put(string uri, string message, string[] header = null)
         {
             UnityWebRequest request = UnityWebRequest.Put(uri, message);
+            
+            return await request.SendWebRequest(header);
+        }
+        
+        public static async Task<UnityWebRequest> Put(string uri, byte[] data, string[] header = null)
+        {
+            UnityWebRequest request = UnityWebRequest.Put(uri, data);
             
             return await request.SendWebRequest(header);
         }
