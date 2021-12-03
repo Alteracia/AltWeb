@@ -10,7 +10,7 @@ namespace Alteracia.Web
     {
         private WebSocket _socket;
         
-        public async Task Connect(string url, Dictionary<string, string> headers = null, IWebSocketHandler.Events events = null)
+        public async Task Connect(string url, Dictionary<string, string> headers = null, Events events = null)
         {
             _socket = new WebSocket(url);
             AssignEvents(events);
@@ -32,7 +32,7 @@ namespace Alteracia.Web
             return _socket?.Close();
         }
 
-        private void AssignEvents(IWebSocketHandler.Events events = null)
+        private void AssignEvents(Events events = null)
         {
             if (_socket == null || events == null) return;
 
@@ -57,7 +57,7 @@ namespace Alteracia.Web
             _socket.OnClose += closeCode =>
             {
                 _socket.CancelConnection();
-                events.OnClose?.Invoke((IWebSocketHandler.CloseCode)closeCode);
+                events.OnClose?.Invoke((CloseCode)closeCode);
             };
         }
 
