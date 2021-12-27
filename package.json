@@ -1,6 +1,6 @@
 {
   "name": "com.alteracia.altweb",
-  "version": "0.0.11",
+  "version": "0.1.1",
   "displayName": "Alteracia.Web",
   "description": "Some network functions for Unity, awaitable requests, json attributes",
   "unity": "2017.1",
