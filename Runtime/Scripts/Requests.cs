@@ -48,11 +48,11 @@ namespace Alteracia.Web
         /// <param name="uri">Full uri of request</param>
         /// <param name="header">Headers add to request</param>
         /// <returns>UnitWebRequest</returns>
-        public static async Task<UnityWebRequest> Get(string uri, string[] header = null)
+        public static async Task<UnityWebRequest> Get(string uri, string[] header = null, Action<float, float> progress = null)
         {
             UnityWebRequest request = UnityWebRequest.Get(uri);
 
-            return await request.SendWebRequest(header);
+            return await request.SendWebRequest(header, progress);
         }
         
         /// <summary>
@@ -61,11 +61,11 @@ namespace Alteracia.Web
         /// <param name="uri">Full uri of request</param>
         /// <param name="header">Headers add to request</param>
         /// <returns>UnitWebRequest</returns>
-        public static async Task<UnityWebRequest> Post(string uri, string[] header = null)
+        public static async Task<UnityWebRequest> Post(string uri, string[] header = null, Action<float, float> progress = null)
         {
             UnityWebRequest request = UnityWebRequest.Post(uri, "");
 
-            return await request.SendWebRequest(header);
+            return await request.SendWebRequest(header, progress);
         }
 
         /// <summary>
@@ -75,11 +75,11 @@ namespace Alteracia.Web
         /// <param name="message">String message</param>
         /// <param name="header">Headers add to request</param>
         /// <returns>UnitWebRequest</returns>
-        public static async Task<UnityWebRequest> Post(string uri, string message, string[] header = null)
+        public static async Task<UnityWebRequest> Post(string uri, string message, string[] header = null, Action<float, float> progress = null)
         {
             UnityWebRequest request = UnityWebRequest.Post(uri, message);
 
-            return await request.SendWebRequest(header);
+            return await request.SendWebRequest(header, progress);
         }
 
         /// <summary>
@@ -89,11 +89,11 @@ namespace Alteracia.Web
         /// <param name="message">WWWform message</param>
         /// <param name="header">Headers add to request</param>
         /// <returns>UnitWebRequest</returns>
-        public static async Task<UnityWebRequest> Post(string uri, WWWForm message, string[] header = null)
+        public static async Task<UnityWebRequest> Post(string uri, WWWForm message, string[] header = null, Action<float, float> progress = null)
         {
             UnityWebRequest request = UnityWebRequest.Post(uri, message);
 
-            return await request.SendWebRequest(header);
+            return await request.SendWebRequest(header, progress);
         }
 
         /// <summary>
@@ -103,65 +103,65 @@ namespace Alteracia.Web
         /// <param name="message">Multipart array</param>
         /// <param name="headers">Headers add to request</param>
         /// <returns>UnitWebRequest</returns>
-        public static async Task<UnityWebRequest> Post(string uri, List<IMultipartFormSection> message, string[] headers = null)
+        public static async Task<UnityWebRequest> Post(string uri, List<IMultipartFormSection> message, string[] headers = null, Action<float, float> progress = null)
         {
             UnityWebRequest request = UnityWebRequest.Post(uri, message);
             
-            return await request.SendWebRequest(headers);
+            return await request.SendWebRequest(headers, progress);
         }
 
-        public static async Task<UnityWebRequest> PostJson(string uri, string json, string[] header = null)
+        public static async Task<UnityWebRequest> PostJson(string uri, string json, string[] header = null, Action<float, float> progress = null)
         {
             UnityWebRequest request = UnityWebRequest.Put(uri, json);
             request.method = "POST";
             
-            return await request.SendWebRequest(header);
+            return await request.SendWebRequest(header, progress);
         }
         
-        public static async Task<UnityWebRequest> Put(string uri, string[] header = null)
+        public static async Task<UnityWebRequest> Put(string uri, string[] header = null, Action<float, float> progress = null)
         {
             UnityWebRequest request = UnityWebRequest.Put(uri, "");
             
-            return await request.SendWebRequest(header);
+            return await request.SendWebRequest(header, progress);
         }
         
-        public static async Task<UnityWebRequest> Put(string uri, string message, string[] header = null)
+        public static async Task<UnityWebRequest> Put(string uri, string message, string[] header = null, Action<float, float> progress = null)
         {
             UnityWebRequest request = UnityWebRequest.Put(uri, message);
             
-            return await request.SendWebRequest(header);
+            return await request.SendWebRequest(header, progress);
         }
         
-        public static async Task<UnityWebRequest> Put(string uri, byte[] data, string[] header = null)
+        public static async Task<UnityWebRequest> Put(string uri, byte[] data, string[] header = null, Action<float, float> progress = null)
         {
             UnityWebRequest request = UnityWebRequest.Put(uri, data);
             
-            return await request.SendWebRequest(header);
+            return await request.SendWebRequest(header, progress);
         }
         
-        public static async Task<UnityWebRequest> Put(string uri, List<IMultipartFormSection> message, string[] headers = null)
+        public static async Task<UnityWebRequest> Put(string uri, List<IMultipartFormSection> message, string[] headers = null, Action<float, float> progress = null)
         {
             UnityWebRequest request = UnityWebRequest.Post(uri, message);
             request.method = "PUT";
             
-            return await request.SendWebRequest(headers);
+            return await request.SendWebRequest(headers, progress);
         }
         
-        public static async Task<UnityWebRequest> Delete(string uri, string[] header = null)
+        public static async Task<UnityWebRequest> Delete(string uri, string[] header = null, Action<float, float> progress = null)
         {
             UnityWebRequest request = UnityWebRequest.Delete(uri);
 
-            return await request.SendWebRequest(header);
+            return await request.SendWebRequest(header, progress);
         }
         
-        public static async Task<UnityWebRequest> Image(string uri, bool nonReadable = true, string[] header = null)
+        public static async Task<UnityWebRequest> Image(string uri, bool nonReadable = true, string[] header = null, Action<float, float> progress = null)
         {
             UnityWebRequest request = UnityWebRequestTexture.GetTexture(uri, nonReadable);
 
-            return await request.SendWebRequest(header);
+            return await request.SendWebRequest(header, progress);
         }
         
-        private static async Task<UnityWebRequest> SendWebRequest(this UnityWebRequest request, string[] header)
+        private static async Task<UnityWebRequest> SendWebRequest(this UnityWebRequest request, string[] header, Action<float, float> progress)
         {
             if (request == null) return null;
             
@@ -177,7 +177,17 @@ namespace Alteracia.Web
             }
 
             // Send the request and wait for a response
-            await request.SendWebRequest();
+            if (progress == null) await request.SendWebRequest();
+            else
+            {
+                var send = request.SendWebRequest();
+
+                while (!send.isDone)
+                {
+                    progress.Invoke(request.uploadProgress, request.downloadProgress);
+                    await Task.Yield();
+                }
+            }
             
 #if ALT_LOADING_LOG || UNITY_EDITOR
             if (!request.Success())
@@ -188,7 +198,7 @@ namespace Alteracia.Web
 #endif
             return request;
         }
-        
+
         private static UnityWebRequestAwaiter GetAwaiter(this UnityWebRequestAsyncOperation asyncOp)
         {
             return new UnityWebRequestAwaiter(asyncOp);
