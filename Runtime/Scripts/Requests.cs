@@ -24,6 +24,14 @@ namespace Alteracia.Web
         public UnityWebRequest GetResult() => _asyncOperation.webRequest;
     }
     
+    public class ForceAcceptAll : CertificateHandler
+    {
+        protected override bool ValidateCertificate(byte[] certificateData)
+        {
+            return true;
+        }
+    }
+    
     public static class Requests
     {
         // TODO Protect from same requests: static Dictionary<string, Task<UnityWebRequest>>
@@ -42,15 +50,18 @@ namespace Alteracia.Web
 #endif
         }
         
+       
         /// <summary>
         /// Get from server using UnitWebRequest
         /// </summary>
         /// <param name="uri">Full uri of request</param>
         /// <param name="header">Headers add to request</param>
         /// <returns>UnitWebRequest</returns>
-        public static async Task<UnityWebRequest> Get(string uri, string[] header = null, Action<float, float> progress = null)
+        public static async Task<UnityWebRequest> Get(string uri, string[] header = null, Action<float, float> progress = null, bool ignoreCertificate = false)
         {
             UnityWebRequest request = UnityWebRequest.Get(uri);
+            
+            if (ignoreCertificate) request.certificateHandler = new ForceAcceptAll();
 
             return await request.SendWebRequest(header, progress);
         }
@@ -63,7 +74,7 @@ namespace Alteracia.Web
         /// <returns>UnitWebRequest</returns>
         public static async Task<UnityWebRequest> Post(string uri, string[] header = null, Action<float, float> progress = null)
         {
-            UnityWebRequest request = UnityWebRequest.Post(uri, "");
+            UnityWebRequest request = UnityWebRequest.PostWwwForm(uri, "");
 
             return await request.SendWebRequest(header, progress);
         }
@@ -77,7 +88,7 @@ namespace Alteracia.Web
         /// <returns>UnitWebRequest</returns>
         public static async Task<UnityWebRequest> Post(string uri, string message, string[] header = null, Action<float, float> progress = null)
         {
-            UnityWebRequest request = UnityWebRequest.Post(uri, message);
+            UnityWebRequest request = UnityWebRequest.PostWwwForm(uri, message);
 
             return await request.SendWebRequest(header, progress);
         }
